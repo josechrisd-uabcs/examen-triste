@@ -162,7 +162,8 @@ export class HomeScreen extends Entity {
             {
                 label: 'Jugar',
                 onSelect: (game) => {
-                    game.removeEntity(this)
+                    game.removeEntity(this);
+                    game.addEntity(new InGameScreen());
                 }
             },
             {
@@ -204,6 +205,38 @@ export class HomeScreen extends Entity {
         }
         if(key == 'Enter') {
             this.options[this.selected_option].onSelect(game)
+        }
+    }
+}
+
+
+class InGameScreen extends Entity {
+    constructor() {
+        super();
+        this.background = '#222'
+        this.board = Object.freeze({
+            pos: [ 10, 10 ],
+            cell_size: [ 20, 20 ],
+            size: [ 10, 20 ],
+            padding: 4
+        });
+    }
+
+    init(game) {
+    }
+    
+    draw(ctx, size, game){
+        ctx.fillStyle = this.background;
+        ctx.fillRect(0, 0, ...size);
+        
+        ctx.fillStyle = "#000";
+        ctx.fillRect(...this.board.pos, ...this.board.cell_size.map((e, i) => e * this.board.size[i] + (this.board.size[i] + 1) * this.board.padding));
+
+        ctx.fillStyle = '#111';
+        for (let i = 0, x = this.board.pos[0] + this.board.padding; i < this.board.size[0]; i++, x += this.board.cell_size[0] + this.board.padding) {
+            for (let j = 0, y = this.board.pos[1] + this.board.padding; j < this.board.size[1]; j++, y += this.board.cell_size[1] + this.board.padding) {
+                ctx.fillRect(x, y, ...this.board.cell_size);
+            }
         }
     }
 }
