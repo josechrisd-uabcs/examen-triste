@@ -288,6 +288,20 @@ class InGameScreen extends Entity {
         }
     }
 
+    is_hitting_something(game, points){
+        const arr_entities = game.getEntitiesOfType(Point.name);
+        for (let i_point = 0; i_point < points.length; i_point++) {
+            const element = points[i_point];
+            for(let i = 0; i < arr_entities.length; i++){
+                const e = arr_entities[i];
+                if(e.collides_with(element)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     update(game){
         this.clock += game.deltaTime * (this.sped_up ? 6 : 1);
         while(this.clock > game.context.speed){
@@ -303,6 +317,10 @@ class InGameScreen extends Entity {
                     break;
                 }
             }
+            if(!stop_figurine){
+                stop_figurine = this.is_hitting_something(game, points);
+            }
+
 
             if(stop_figurine){   
                 this.figurine.pos = [this.figurine.pos[0], this.figurine.pos[1] - 1];
