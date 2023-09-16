@@ -240,6 +240,19 @@ class InGameScreen extends Entity {
         })
     }
 
+    keydown(keycode, key, event, game) {
+        if(key == ' ') {
+            this.figurine.rotateFigure();
+        }
+        if(key == 'ArrowLeft') {
+            this.figurine.pos = [this.figurine.pos[0] - 1, this.figurine.pos[1]];
+            this.clock -= .05;
+        }
+        if(key == 'ArrowRight') {
+            this.figurine.pos = [this.figurine.pos[0] + 1, this.figurine.pos[1]];
+            this.clock -= .05;
+        }
+    }
 
     update(game){
         this.clock += game.deltaTime * (this.sped_up ? 6 : 1);
