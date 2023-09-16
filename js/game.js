@@ -246,10 +246,34 @@ class InGameScreen extends Entity {
         }
         if(key == 'ArrowLeft') {
             this.figurine.pos = [this.figurine.pos[0] - 1, this.figurine.pos[1]];
+            const points = this.figurine.points;
+            let hits_something = false;
+            for (let i = 0; i < points.length; i++) {
+                const element = points[i];
+                if(element[0] < 0){
+                    hits_something = true;
+                    break;
+                }
+            }
+            if(hits_something){
+                this.figurine.pos = [this.figurine.pos[0] + 1, this.figurine.pos[1]];
+            }
             this.clock -= .05;
         }
         if(key == 'ArrowRight') {
             this.figurine.pos = [this.figurine.pos[0] + 1, this.figurine.pos[1]];
+            const points = this.figurine.points;
+            let hits_something = false;
+            for (let i = 0; i < points.length; i++) {
+                const element = points[i];
+                if(element[0] >= this.board.size[0]){
+                    hits_something = true;
+                    break;
+                }
+            }
+            if(hits_something){
+                this.figurine.pos = [this.figurine.pos[0] - 1, this.figurine.pos[1]];
+            }
             this.clock -= .05;
         }
     }
