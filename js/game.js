@@ -251,6 +251,7 @@ class InGameScreen extends Entity {
         this.clock = 0;
         this.sped_up = false;
         this.point_map = [];
+        this.time_elapsed = 0;
     }
 
     init(game) {
@@ -339,6 +340,7 @@ class InGameScreen extends Entity {
     
     update(game){
         this.clock += game.deltaTime * (this.sped_up ? 6 : 1);
+        this.time_elapsed += game.deltaTime;
         while(this.clock > game.context.speed){
             this.clock -= game.context.speed;
             this.figurine.pos = [this.figurine.pos[0], this.figurine.pos[1] + 1]
@@ -395,5 +397,8 @@ class InGameScreen extends Entity {
 
         ctx.fillStyle = "#fff";
         ctx.fillText("SIGUIENTE", 320, 116);
+
+        ctx.fillText("TIEMPO", 320, 172);
+        ctx.fillText(this.time_elapsed.toFixed(0), 320, 152);
     }
 }
