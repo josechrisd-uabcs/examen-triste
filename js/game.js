@@ -223,6 +223,7 @@ class InGameScreen extends Entity {
         });
         this.figurine = null;
         this.clock = 0;
+        this.sped_up = false;
     }
 
     init(game) {
@@ -275,6 +276,15 @@ class InGameScreen extends Entity {
                 this.figurine.pos = [this.figurine.pos[0] - 1, this.figurine.pos[1]];
             }
             this.clock -= .05;
+        }
+        if(key == 'ArrowDown'){
+            this.sped_up = true;
+        }
+    }
+
+    keyup(keycode, key) {
+        if(key == 'ArrowDown'){
+            this.sped_up = false;
         }
     }
 
