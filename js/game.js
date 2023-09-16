@@ -58,6 +58,102 @@ const figurines = [
     }
 ]
 
+
+class Figurine extends Entity {
+    constructor(cell_size, board_pos, pos, padding, figureData = {
+        figurePoints: [
+            ['*',' '],
+            ['*',' '],
+            ['*','*'],
+        ],
+    }, color = '#fff') {
+        super(1);
+        this.board_pos = board_pos;
+        this.pos = pos;
+        this.cell_size = cell_size;
+        this.padding = padding;
+        this.figureData = figureData;
+        this.color = color;
+        this.rotation = 0;
+    }
+
+    draw(ctx, size, game){
+        ctx.fillStyle = this.color;
+        for (let i = 0, y = this.board_pos[1] + this.padding + (this.cell_size[0] + this.padding) * this.pos[1]; i < this.figureData.figurePoints.length; i++, y += this.cell_size[1] + this.padding) {
+            for (let j = 0, x = this.board_pos[0] + this.padding + (this.cell_size[1] + this.padding) * this.pos[0]; j < this.figureData.figurePoints[i].length; j++, x += this.cell_size[0] + this.padding) {
+                if(this.figureData.figurePoints[i][j] !== ' '){
+                    ctx.fillRect(x, y, ...this.cell_size);
+                }
+            }
+        }
+    }
+
+    get points () {
+        const arr = [];
+        for (let i = 0; i < this.figureData.figurePoints.length; i++) {
+            for (let j = 0; j < this.figureData.figurePoints[i].length; j++) {
+                if(this.figureData.figurePoints[i][j] !== ' '){
+                    arr.push([this.pos[0] + j, this.pos[1] + i])
+                }
+            }
+        }
+        return arr;
+    }
+    
+    collides_with(point = [0, 0]){
+        return point[1] - this.pos[1] >= 0 &&
+        point[1] - this.pos[1] < this.figureData.figurePoints.length && 
+        point[0] - this.pos[0] >= 0 && 
+        point[0] - this.pos[0] < this.figureData.figurePoints[point[1] - this.pos[1]].length &&
+        this.figureData.figurePoints[point[1] - this.pos[1]][point[0] - this.pos[0]]  !== ' ';
+    }
+
+    rotate(direction = 1){
+        const new_rotation = rotationalClamp(this.rotation + direction, 0, 4);
+        const figure_data = this.figureData;
+        let new_figure_points;
+        if((this.rotation & 0b1) !== (new_rotation & 0b1)){
+            new_figure_points = Array(figure_data.figurePoints[0].length).fill(0).map(e => Array(figure_data.figurePoints.length).fill(' '));
+            for (let i = 0; i < new_figure_points.length; i++) {
+                for (let j = 0; j < new_figure_points[i].length; j++) {
+                    new_figure_points[i][new_figure_points[i].length - 1 -j] = figure_data.figurePoints[j][i];
+                }
+            }
+        }
+        return new_figure_points;
+    }
+
+    rotateFigure() {
+        this.figureData.figurePoints = this.rotate(1);
+    }
+}
+
+        
+class Point extends Entity {
+    constructor(cell_size, board_pos, pos, padding, color = '#fff') {
+        super(1);
+        this.board_pos = board_pos;
+        this.pos = pos;
+        this.cell_size = cell_size;
+        this.padding = padding;
+        this.color = color;
+        this.rotation = 0;
+    }
+
+    draw(ctx, size, game){
+        ctx.fillStyle = this.color;
+        ctx.fillRect(
+            this.board_pos[0] + this.padding + (this.cell_size[1] + this.padding) * this.pos[0], 
+            this.board_pos[1] + this.padding + (this.cell_size[0] + this.padding) * this.pos[1], 
+            ...this.cell_size
+        );
+    }
+    
+    collides_with(point = [0, 0]){
+        return this.pos[0] == point[0] && this.pos[1] == point[1];
+    }
+}
+
 export class HomeScreen extends Entity {
     constructor(){
         super();
