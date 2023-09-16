@@ -1,3 +1,5 @@
+import { Entity } from "./engine.js";
+
 const figurines = [
     {
         figurePoints: [
