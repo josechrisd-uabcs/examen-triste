@@ -20,3 +20,10 @@ export const deepCopy = (arr) => {
     }
     return arr;
 }
+        
+export const rotationalClamp = (val, min, max) => {
+    val -= min
+    const diff = max - min;
+    while(val < min) val += diff;
+    return (val % diff) + min;
+}

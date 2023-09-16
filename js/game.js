@@ -1,5 +1,5 @@
 import { Entity } from "./engine.js";
-import { deepCopy } from "./utils.js";
+import { deepCopy, rotationalClamp } from "./utils.js";
 
 const figurines = [
     {
@@ -256,6 +256,9 @@ class InGameScreen extends Entity {
                     break;
                 }
             }
+            if(!hits_something) {
+                hits_something = this.is_hitting_something(game, points);
+            }
             if(hits_something){
                 this.figurine.pos = [this.figurine.pos[0] + 1, this.figurine.pos[1]];
             }
@@ -271,6 +274,9 @@ class InGameScreen extends Entity {
                     hits_something = true;
                     break;
                 }
+            }
+            if(!hits_something) {
+                hits_something = this.is_hitting_something(game, points);
             }
             if(hits_something){
                 this.figurine.pos = [this.figurine.pos[0] - 1, this.figurine.pos[1]];
