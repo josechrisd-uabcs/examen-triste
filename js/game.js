@@ -1,4 +1,5 @@
 import { Entity } from "./engine.js";
+import { deepCopy } from "./utils.js";
 
 const figurines = [
     {
@@ -220,11 +221,54 @@ class InGameScreen extends Entity {
             size: [ 10, 20 ],
             padding: 4
         });
+        this.figurine = null;
+        this.clock = 0;
     }
 
     init(game) {
+        game.setContext({
+            speed: .5,
+            next_figurine: figurines[Math.floor(Math.random() * figurines.length)],
+        })
+        this.generate_figurine(game);
     }
     
+    generate_figurine(game) {
+        this.figurine = game.addEntity(new Figurine(this.board.cell_size, this.board.pos, [1, 1], this.board.padding, deepCopy(game.context.next_figurine), game.context.next_figurine.color))
+        game.setContext({
+            next_figurine: figurines[Math.floor(Math.random() * figurines.length)],
+        })
+    }
+
+
+    update(game){
+        this.clock += game.deltaTime * (this.sped_up ? 6 : 1);
+        while(this.clock > game.context.speed){
+            this.clock -= game.context.speed;
+            this.figurine.pos = [this.figurine.pos[0], this.figurine.pos[1] + 1]
+            const points = this.figurine.points;
+            let stop_figurine = false;
+            for (let i = 0; i < points.length; i++) {
+                const element = points[i];
+
+                if(element[1] >= this.board.size[1]){
+                    stop_figurine = true;
+                    break;
+                }
+            }
+
+            if(stop_figurine){   
+                this.figurine.pos = [this.figurine.pos[0], this.figurine.pos[1] - 1];
+                const points = this.figurine.points;
+                points.forEach(([x, y]) => {
+                    game.addEntity(new Point(this.board.cell_size, this.board.pos, [x, y], this.board.padding, this.figurine.color))
+                })
+                game.removeEntity(this.figurine);
+                this.generate_figurine(game)
+            }
+        }
+    }
+
     draw(ctx, size, game){
         ctx.fillStyle = this.background;
         ctx.fillRect(0, 0, ...size);
