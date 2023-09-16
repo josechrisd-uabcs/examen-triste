@@ -222,8 +222,10 @@ class InGameScreen extends Entity {
             padding: 4
         });
         this.figurine = null;
+        this.next_figurine = null;
         this.clock = 0;
         this.sped_up = false;
+        this.point_map = [];
     }
 
     init(game) {
@@ -235,10 +237,12 @@ class InGameScreen extends Entity {
     }
     
     generate_figurine(game) {
+        this.next_figurine && game.removeEntity(this.next_figurine);
         this.figurine = game.addEntity(new Figurine(this.board.cell_size, this.board.pos, [1, 1], this.board.padding, deepCopy(game.context.next_figurine), game.context.next_figurine.color))
         game.setContext({
             next_figurine: figurines[Math.floor(Math.random() * figurines.length)],
         })
+        this.next_figurine = game.addEntity(new Figurine(this.board.cell_size, this.board.pos, [12, 2], this.board.padding, game.context.next_figurine, game.context.next_figurine.color))
     }
 
     keydown(keycode, key, event, game) {
@@ -327,14 +331,24 @@ class InGameScreen extends Entity {
                 stop_figurine = this.is_hitting_something(game, points);
             }
 
-
             if(stop_figurine){   
                 this.figurine.pos = [this.figurine.pos[0], this.figurine.pos[1] - 1];
                 const points = this.figurine.points;
                 points.forEach(([x, y]) => {
-                    game.addEntity(new Point(this.board.cell_size, this.board.pos, [x, y], this.board.padding, this.figurine.color))
+                    const arr = this.point_map[this.board.size[1] - y - 1] ?? [];
+                    arr.push(game.addEntity(new Point(this.board.cell_size, this.board.pos, [x, y], this.board.padding, this.figurine.color)))
+                    !this.point_map[this.board.size[1] - y - 1] && (this.point_map[this.board.size[1] - y - 1] = arr)
                 })
                 game.removeEntity(this.figurine);
+                let lines_completed;
+                while((lines_completed = this.point_map.map((e, i) => [e, i]).filter(([e,i]) => e.length >= this.board.size[0])).length){
+                    const [elem, i] = lines_completed[0];
+                    elem.forEach(e => game.removeEntity(e));
+                    for(let i2 = i; i2 < this.point_map.length; i2++){
+                        this.point_map[i2].forEach(e => e.pos[1]++);
+                    }
+                    this.point_map.splice(i, 1);
+                }
                 this.generate_figurine(game)
             }
         }
