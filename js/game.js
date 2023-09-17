@@ -1,3 +1,4 @@
+import { assets, load_assets } from "./asset_loader.js";
 import { Entity } from "./engine.js";
 import { deepCopy, max, rotationalClamp } from "./utils.js";
 
@@ -7,48 +8,48 @@ const figurines = [
             ['*','*', '*'],
             ['*',' ', ' '],
         ],
-        color: "#cc6600"
+        image: assets.l_image
     },
     {
         figurePoints: [
             ['*','*','*'],
             [' ',' ','*'],
         ],
-        color: "#0000cc"
+        image: assets.j_image
     },
     {
         figurePoints: [
             [' ','*','*'],
             ['*','*',' '],
         ],
-        color: "#00cc00"
+        image: assets.s_image
     },
     {
         figurePoints: [            
             ['*','*',' '],
             [' ','*','*'],
         ],
-        color: "#cc0000"
+        image: assets.z_image
     },
     {
         figurePoints: [
             ['*','*'],
             ['*','*'],
         ],
-        color: "#cccc00"
+        image: assets.o_image
     },
     {
         figurePoints: [
             ['*','*','*','*'],
         ],
-        color: "#00cdcd"
+        image: assets.i_image
     },
     {
         figurePoints: [
             ['*','*','*'],
             [' ','*',' ']
         ],
-        color: "#9900cc"
+        image: assets.t_image
     }
 ]
 
@@ -60,23 +61,24 @@ class Figurine extends Entity {
             ['*',' '],
             ['*','*'],
         ],
-    }, color = '#fff') {
+    }, image) {
         super(1);
         this.board_pos = board_pos;
         this.pos = pos;
         this.cell_size = cell_size;
         this.padding = padding;
         this.figureData = figureData;
-        this.color = color;
+        this.image = image;
         this.rotation = 0;
     }
 
     draw(ctx, size, game){
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.image.color;
         for (let i = 0, y = this.board_pos[1] + this.padding + (this.cell_size[0] + this.padding) * this.pos[1]; i < this.figureData.figurePoints.length; i++, y += this.cell_size[1] + this.padding) {
             for (let j = 0, x = this.board_pos[0] + this.padding + (this.cell_size[1] + this.padding) * this.pos[0]; j < this.figureData.figurePoints[i].length; j++, x += this.cell_size[0] + this.padding) {
                 if(this.figureData.figurePoints[i][j] !== ' '){
                     ctx.fillRect(x, y, ...this.cell_size);
+                    this.image.asset && ctx.drawImage(this.image.asset, x, y, ...this.cell_size);
                 }
             }
         }
@@ -134,25 +136,26 @@ class NextFigurine extends Entity {
             ['*',' '],
             ['*','*'],
         ],
-    }, color = '#fff') {
+    }, image) {
         super(1);
         this.size = [ figureData.figurePoints[0].length, figureData.figurePoints.length ];
         this.pos = pos;
         this.cell_size = cell_size;
         this.padding = padding;
         this.figureData = figureData;
-        this.color = color;
+        this.image = image;
         this.rotation = 0;
     }
 
     draw(ctx, size, game){
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.image.color;
         const real_size = this.size.map((e, i) => this.cell_size[i] * e + this.padding * (e + 1));
         const pos = [this.pos[0] - real_size[0] / 2, this.pos[1] - real_size[1] / 2]
         for (let i = 0, y = pos[1] + this.padding; i < this.figureData.figurePoints.length; i++, y += this.cell_size[1] + this.padding) {
             for (let j = 0, x = pos[0] + this.padding; j < this.figureData.figurePoints[i].length; j++, x += this.cell_size[0] + this.padding) {
                 if(this.figureData.figurePoints[i][j] !== ' '){
                     ctx.fillRect(x, y, ...this.cell_size);
+                    this.image.asset && ctx.drawImage(this.image.asset, x, y, ...this.cell_size);
                 }
             }
         }
@@ -160,19 +163,26 @@ class NextFigurine extends Entity {
 }
         
 class Point extends Entity {
-    constructor(cell_size, board_pos, pos, padding, color = '#fff') {
+    constructor(cell_size, board_pos, pos, padding, image = '#fff') {
         super(1);
         this.board_pos = board_pos;
         this.pos = pos;
         this.cell_size = cell_size;
         this.padding = padding;
-        this.color = color;
+        this.image = image;
         this.rotation = 0;
     }
 
     draw(ctx, size, game){
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.image.color;
         ctx.fillRect(
+            this.board_pos[0] + this.padding + (this.cell_size[1] + this.padding) * this.pos[0], 
+            this.board_pos[1] + this.padding + (this.cell_size[0] + this.padding) * this.pos[1], 
+            ...this.cell_size
+        );
+        
+        this.image.asset && ctx.drawImage(
+            this.image.asset,
             this.board_pos[0] + this.padding + (this.cell_size[1] + this.padding) * this.pos[0], 
             this.board_pos[1] + this.padding + (this.cell_size[0] + this.padding) * this.pos[1], 
             ...this.cell_size
@@ -214,6 +224,10 @@ export class HomeScreen extends Entity {
         return `${this.fontSize}px ${this.fontFamily}`
     }
 
+    init(game){
+        game.addEntity(new MusicController());
+    }
+
     draw(ctx, size, game){
         ctx.fillStyle = this.background;
         ctx.fillRect(0, 0, ...size);
@@ -246,9 +260,9 @@ class InGameScreen extends Entity {
         this.background = '#222'
         this.board = Object.freeze({
             pos: [ 10, 10 ],
-            cell_size: [ 20, 20 ],
+            cell_size: [ 24, 24 ],
             size: [ 10, 20 ],
-            padding: 4
+            padding: 2
         });
         this.figurine = null;
         this.next_figurine = null;
@@ -270,11 +284,11 @@ class InGameScreen extends Entity {
     
     generate_figurine(game) {
         this.next_figurine && game.removeEntity(this.next_figurine);
-        this.figurine = game.addEntity(new Figurine(this.board.cell_size, this.board.pos, [1, 1], this.board.padding, deepCopy(game.context.next_figurine), game.context.next_figurine.color))
+        this.figurine = game.addEntity(new Figurine(this.board.cell_size, this.board.pos, [1, 1], this.board.padding, deepCopy(game.context.next_figurine), game.context.next_figurine.image))
         game.setContext({
             next_figurine: figurines[Math.floor(Math.random() * figurines.length)],
         })
-        this.next_figurine = game.addEntity(new NextFigurine(this.board.cell_size, [320, 72], this.board.padding, game.context.next_figurine, game.context.next_figurine.color))
+        this.next_figurine = game.addEntity(new NextFigurine(this.board.cell_size, [320, 72], this.board.padding, game.context.next_figurine, game.context.next_figurine.image))
     }
 
     keydown(keycode, key, event, game) {
@@ -419,7 +433,7 @@ class InGameScreen extends Entity {
                 const points = this.figurine.points;
                 points.forEach(([x, y]) => {
                     const arr = this.point_map[this.board.size[1] - y - 1] ?? [];
-                    arr.push(game.addEntity(new Point(this.board.cell_size, this.board.pos, [x, y], this.board.padding, this.figurine.color)))
+                    arr.push(game.addEntity(new Point(this.board.cell_size, this.board.pos, [x, y], this.board.padding, this.figurine.image)))
                     !this.point_map[this.board.size[1] - y - 1] && (this.point_map[this.board.size[1] - y - 1] = arr)
                 })
                 game.removeEntity(this.figurine);
@@ -459,5 +473,39 @@ class InGameScreen extends Entity {
         
         ctx.fillText("SIG. INCR.", 320, 220);
         ctx.fillText((game.context.speed_boost - this.speed_boost_timer).toFixed(0), 320, 200);
+    }
+}
+
+export class MusicController extends Entity{
+    constructor(){
+        super();
+        this.music_assets = [
+            assets.music_1,
+            assets.music_2,
+            assets.music_3,
+            assets.music_4,
+            assets.music_5,
+            assets.music_6
+        ]
+        this.music_playing = null;
+    }
+
+    keydown(){
+        if(this.music_playing === null){
+            this.play_music();
+        }
+    }
+
+    play_music(){
+        this.music_playing && (this.music_playing.onended = () => {});
+        this.music_playing = this.music_assets[Math.floor(Math.random() * this.music_assets.length)];
+        if(!this.music_playing.asset){
+            this.play_music();
+            return;
+        }
+        this.music_playing.asset.play();
+        this.music_playing.asset.onended = () => {
+            this.play_music();
+        }
     }
 }
