@@ -27,3 +27,14 @@ export const rotationalClamp = (val, min, max) => {
     while(val < min) val += diff;
     return (val % diff) + min;
 }
+
+export const max = (a, b = undefined) => {
+    if(Array.isArray(a)) {
+        let max = a[0]
+        for (let i2 = 1; i2 < a.length; i2++) {
+            max < a[i2] && (max = a[i2]);
+        }
+        return max;
+    }
+    return a > b ? a : b;
+}

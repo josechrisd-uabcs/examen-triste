@@ -1,36 +1,32 @@
 import { Entity } from "./engine.js";
-import { deepCopy, rotationalClamp } from "./utils.js";
+import { deepCopy, max, rotationalClamp } from "./utils.js";
 
 const figurines = [
     {
         figurePoints: [
-            ['*',' '],
-            ['*',' '],
-            ['*','*'],
+            ['*','*', '*'],
+            ['*',' ', ' '],
         ],
         color: "#cc6600"
     },
     {
         figurePoints: [
-            [' ','*'],
-            [' ','*'],
-            ['*','*'],
+            ['*','*','*'],
+            [' ',' ','*'],
         ],
         color: "#0000cc"
     },
     {
         figurePoints: [
-            ['*',' '],
-            ['*','*'],
-            [' ','*'],
+            [' ','*','*'],
+            ['*','*',' '],
         ],
         color: "#00cc00"
     },
     {
-        figurePoints: [
-            [' ','*'],
-            ['*','*'],
-            ['*',' '],
+        figurePoints: [            
+            ['*','*',' '],
+            [' ','*','*'],
         ],
         color: "#cc0000"
     },
@@ -43,10 +39,7 @@ const figurines = [
     },
     {
         figurePoints: [
-            ['*',],
-            ['*',],
-            ['*',],
-            ['*',],
+            ['*','*','*','*'],
         ],
         color: "#00cdcd"
     },
@@ -100,6 +93,10 @@ class Figurine extends Entity {
         }
         return arr;
     }
+
+    get size() {
+        return [max(this.figureData.figurePoints.map(e => e.length)), this.figureData.figurePoints.length];
+    }
     
     collides_with(point = [0, 0]){
         return point[1] - this.pos[1] >= 0 &&
@@ -129,6 +126,38 @@ class Figurine extends Entity {
     }
 }
 
+class NextFigurine extends Entity {
+
+    constructor(cell_size, pos, padding, figureData = {
+        figurePoints: [
+            ['*',' '],
+            ['*',' '],
+            ['*','*'],
+        ],
+    }, color = '#fff') {
+        super(1);
+        this.size = [ figureData.figurePoints[0].length, figureData.figurePoints.length ];
+        this.pos = pos;
+        this.cell_size = cell_size;
+        this.padding = padding;
+        this.figureData = figureData;
+        this.color = color;
+        this.rotation = 0;
+    }
+
+    draw(ctx, size, game){
+        ctx.fillStyle = this.color;
+        const real_size = this.size.map((e, i) => this.cell_size[i] * e + this.padding * (e + 1));
+        const pos = [this.pos[0] - real_size[0] / 2, this.pos[1] - real_size[1] / 2]
+        for (let i = 0, y = pos[1] + this.padding; i < this.figureData.figurePoints.length; i++, y += this.cell_size[1] + this.padding) {
+            for (let j = 0, x = pos[0] + this.padding; j < this.figureData.figurePoints[i].length; j++, x += this.cell_size[0] + this.padding) {
+                if(this.figureData.figurePoints[i][j] !== ' '){
+                    ctx.fillRect(x, y, ...this.cell_size);
+                }
+            }
+        }
+    }
+}
         
 class Point extends Entity {
     constructor(cell_size, board_pos, pos, padding, color = '#fff') {
@@ -226,12 +255,15 @@ class InGameScreen extends Entity {
         this.clock = 0;
         this.sped_up = false;
         this.point_map = [];
+        this.time_elapsed = 0;
+        this.speed_boost_timer = 0;
     }
 
     init(game) {
         game.setContext({
             speed: .5,
             next_figurine: figurines[Math.floor(Math.random() * figurines.length)],
+            speed_boost: 180
         })
         this.generate_figurine(game);
     }
@@ -242,12 +274,56 @@ class InGameScreen extends Entity {
         game.setContext({
             next_figurine: figurines[Math.floor(Math.random() * figurines.length)],
         })
-        this.next_figurine = game.addEntity(new Figurine(this.board.cell_size, this.board.pos, [12, 2], this.board.padding, game.context.next_figurine, game.context.next_figurine.color))
+        this.next_figurine = game.addEntity(new NextFigurine(this.board.cell_size, [320, 72], this.board.padding, game.context.next_figurine, game.context.next_figurine.color))
     }
 
     keydown(keycode, key, event, game) {
         if(key == ' ') {
+            const backup_points = deepCopy(this.figurine.figureData);
+            const backup_pos = deepCopy(this.figurine.pos);
+            
             this.figurine.rotateFigure();
+            let points = this.figurine.points;
+            let hits_something = false;
+            for (let i = 0; i < points.length; i++) {
+                const element = points[i];
+                if(element[0] >= this.board.size[0]){
+                    hits_something = true;
+                    break;
+                }
+            }
+            if(!hits_something) {
+                hits_something = this.is_hitting_something(game, points);
+            }
+            if(hits_something){
+                const w = this.figurine.size[0];
+                const h = this.figurine.size[1];
+                const x = this.figurine.pos[0];
+                for(let m = x - 1; m >= x - (w - h); m--){
+                    this.figurine.pos[0]--;
+                    let points = this.figurine.points;
+                    hits_something = false;
+                    for (let i = 0; i < points.length; i++) {
+                        const element = points[i];
+                        if(element[0] >= this.board.size[0]){
+                            hits_something = true;
+                            break;
+                        }
+                    }
+                    if(!hits_something) {
+                        hits_something = this.is_hitting_something(game, points);
+                    }
+                    if(!hits_something){
+                        break;
+                    }
+                }
+
+            }
+            if(hits_something){
+                this.figurine.figureData = backup_points;
+                this.figurine.pos = backup_pos;
+            }
+
         }
         if(key == 'ArrowLeft') {
             this.figurine.pos = [this.figurine.pos[0] - 1, this.figurine.pos[1]];
@@ -314,6 +390,13 @@ class InGameScreen extends Entity {
     
     update(game){
         this.clock += game.deltaTime * (this.sped_up ? 6 : 1);
+        this.time_elapsed += game.deltaTime;
+        this.speed_boost_timer += game.deltaTime;
+        while(this.speed_boost_timer > game.context.speed_boost){
+            this.speed_boost_timer -= game.context.speed_boost;
+            game.context.speed -= .1;
+            game.context.speed = Math.max(game.context.speed, .15)
+        }
         while(this.clock > game.context.speed){
             this.clock -= game.context.speed;
             this.figurine.pos = [this.figurine.pos[0], this.figurine.pos[1] + 1]
@@ -367,5 +450,14 @@ class InGameScreen extends Entity {
                 ctx.fillRect(x, y, ...this.board.cell_size);
             }
         }
+
+        ctx.fillStyle = "#fff";
+        ctx.fillText("SIGUIENTE", 320, 116);
+
+        ctx.fillText("TIEMPO", 320, 172);
+        ctx.fillText(this.time_elapsed.toFixed(0), 320, 152);
+        
+        ctx.fillText("SIG. INCR.", 320, 220);
+        ctx.fillText((game.context.speed_boost - this.speed_boost_timer).toFixed(0), 320, 200);
     }
 }
