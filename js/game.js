@@ -1,5 +1,5 @@
 import { Entity } from "./engine.js";
-import { deepCopy, rotationalClamp } from "./utils.js";
+import { deepCopy, max, rotationalClamp } from "./utils.js";
 
 const figurines = [
     {
@@ -92,6 +92,10 @@ class Figurine extends Entity {
             }
         }
         return arr;
+    }
+
+    get size() {
+        return [max(this.figureData.figurePoints.map(e => e.length)), this.figureData.figurePoints.length];
     }
     
     collides_with(point = [0, 0]){
@@ -275,7 +279,51 @@ class InGameScreen extends Entity {
 
     keydown(keycode, key, event, game) {
         if(key == ' ') {
+            const backup_points = deepCopy(this.figurine.figureData);
+            const backup_pos = deepCopy(this.figurine.pos);
+            
             this.figurine.rotateFigure();
+            let points = this.figurine.points;
+            let hits_something = false;
+            for (let i = 0; i < points.length; i++) {
+                const element = points[i];
+                if(element[0] >= this.board.size[0]){
+                    hits_something = true;
+                    break;
+                }
+            }
+            if(!hits_something) {
+                hits_something = this.is_hitting_something(game, points);
+            }
+            if(hits_something){
+                const w = this.figurine.size[0];
+                const h = this.figurine.size[1];
+                const x = this.figurine.pos[0];
+                for(let m = x - 1; m >= x - (w - h); m--){
+                    this.figurine.pos[0]--;
+                    let points = this.figurine.points;
+                    hits_something = false;
+                    for (let i = 0; i < points.length; i++) {
+                        const element = points[i];
+                        if(element[0] >= this.board.size[0]){
+                            hits_something = true;
+                            break;
+                        }
+                    }
+                    if(!hits_something) {
+                        hits_something = this.is_hitting_something(game, points);
+                    }
+                    if(!hits_something){
+                        break;
+                    }
+                }
+
+            }
+            if(hits_something){
+                this.figurine.figureData = backup_points;
+                this.figurine.pos = backup_pos;
+            }
+
         }
         if(key == 'ArrowLeft') {
             this.figurine.pos = [this.figurine.pos[0] - 1, this.figurine.pos[1]];
