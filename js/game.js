@@ -1,4 +1,4 @@
-import { assets, load_assets } from "./asset_loader.js";
+import { assets, get_sounds, load_assets } from "./asset_loader.js";
 import { Entity } from "./engine.js";
 import { deepCopy, max, rotationalClamp } from "./utils.js";
 
@@ -8,48 +8,55 @@ const figurines = [
             ['*','*', '*'],
             ['*',' ', ' '],
         ],
-        image: assets.l_image
+        image: assets.l_image,
+        sounds: get_sounds('bamboo'),
     },
     {
         figurePoints: [
             ['*','*','*'],
             [' ',' ','*'],
         ],
-        image: assets.j_image
+        image: assets.j_image,
+        sounds: get_sounds('stone'),
     },
     {
         figurePoints: [
             [' ','*','*'],
             ['*','*',' '],
         ],
-        image: assets.s_image
+        image: assets.s_image,
+        sounds: get_sounds('grass'),
     },
     {
         figurePoints: [            
             ['*','*',' '],
             [' ','*','*'],
         ],
-        image: assets.z_image
+        image: assets.z_image,
+        sounds: get_sounds('copper'),
     },
     {
         figurePoints: [
             ['*','*'],
             ['*','*'],
         ],
-        image: assets.o_image
+        image: assets.o_image,
+        sounds: get_sounds('sand'),
     },
     {
         figurePoints: [
             ['*','*','*','*'],
         ],
-        image: assets.i_image
+        image: assets.i_image,
+        sounds: get_sounds('gravel'),
     },
     {
         figurePoints: [
             ['*','*','*'],
             [' ','*',' ']
         ],
-        image: assets.t_image
+        image: assets.t_image,
+        sounds: get_sounds('wood'),
     }
 ]
 
@@ -61,7 +68,7 @@ class Figurine extends Entity {
             ['*',' '],
             ['*','*'],
         ],
-    }, image) {
+    }, image, sounds) {
         super(1);
         this.board_pos = board_pos;
         this.pos = pos;
@@ -70,6 +77,7 @@ class Figurine extends Entity {
         this.figureData = figureData;
         this.image = image;
         this.rotation = 0;
+        this.sounds = sounds;
     }
 
     draw(ctx, size, game){
@@ -125,6 +133,17 @@ class Figurine extends Entity {
 
     rotateFigure() {
         this.figureData.figurePoints = this.rotate(1);
+    }
+
+    play_sound(){
+        let sound = this.sounds[Math.floor(Math.random() * this.sounds.length)];
+        let i = 0;
+        while(!sound.asset){
+            let sound = this.sounds[Math.random() * this.sounds.length];
+            if(i++ > 10) return;
+        }
+        sound.asset.currentTime = (0);
+        sound.asset.play();
     }
 }
 
@@ -271,6 +290,18 @@ class InGameScreen extends Entity {
         this.point_map = [];
         this.time_elapsed = 0;
         this.speed_boost_timer = 0;
+        this.line_sounds = get_sounds('line');
+    }
+    
+    play_line_sound(){
+        let sound = this.line_sounds[Math.floor(Math.random() * this.line_sounds.length)];
+        let i = 0;
+        while(!sound.asset){
+            let sound = this.line_sounds[Math.random() * this.line_sounds.length];
+            if(i++ > 10) return;
+        }
+        sound.asset.currentTime = (0);
+        sound.asset.play();
     }
 
     init(game) {
@@ -284,7 +315,7 @@ class InGameScreen extends Entity {
     
     generate_figurine(game) {
         this.next_figurine && game.removeEntity(this.next_figurine);
-        this.figurine = game.addEntity(new Figurine(this.board.cell_size, this.board.pos, [1, 1], this.board.padding, deepCopy(game.context.next_figurine), game.context.next_figurine.image))
+        this.figurine = game.addEntity(new Figurine(this.board.cell_size, this.board.pos, [1, 1], this.board.padding, deepCopy(game.context.next_figurine), game.context.next_figurine.image, game.context.next_figurine.sounds))
         game.setContext({
             next_figurine: figurines[Math.floor(Math.random() * figurines.length)],
         })
@@ -336,6 +367,8 @@ class InGameScreen extends Entity {
             if(hits_something){
                 this.figurine.figureData = backup_points;
                 this.figurine.pos = backup_pos;
+            }else{
+                this.figurine.play_sound();
             }
 
         }
@@ -355,6 +388,8 @@ class InGameScreen extends Entity {
             }
             if(hits_something){
                 this.figurine.pos = [this.figurine.pos[0] + 1, this.figurine.pos[1]];
+            }else{
+                this.figurine.play_sound();
             }
             this.clock -= .05;
         }
@@ -374,6 +409,8 @@ class InGameScreen extends Entity {
             }
             if(hits_something){
                 this.figurine.pos = [this.figurine.pos[0] - 1, this.figurine.pos[1]];
+            }else{
+                this.figurine.play_sound();
             }
             this.clock -= .05;
         }
@@ -438,6 +475,7 @@ class InGameScreen extends Entity {
                 })
                 game.removeEntity(this.figurine);
                 let lines_completed;
+                let m = false;
                 while((lines_completed = this.point_map.map((e, i) => [e, i]).filter(([e,i]) => e.length >= this.board.size[0])).length){
                     const [elem, i] = lines_completed[0];
                     elem.forEach(e => game.removeEntity(e));
@@ -445,8 +483,12 @@ class InGameScreen extends Entity {
                         this.point_map[i2].forEach(e => e.pos[1]++);
                     }
                     this.point_map.splice(i, 1);
+                    m = true;
                 }
+                m && this.play_line_sound()
                 this.generate_figurine(game)
+            }else{
+                this.figurine.play_sound();
             }
         }
     }

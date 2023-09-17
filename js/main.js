@@ -1,8 +1,8 @@
-import { load_assets } from "./asset_loader.js";
+import { assets, load_assets } from "./asset_loader.js";
 import { Game } from "./engine.js";
 import { HomeScreen } from "./game.js";
 import { LoadingScreen } from "./loading_screen.js";
-
+window.assets = assets
 window.addEventListener('load', () => {
     const game = new Game(document.getElementById('canvas'))
     game.doLoop();
