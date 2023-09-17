@@ -6,7 +6,7 @@ export const randomRGB = () => {
 }
 
 export const deepCopy = (arr) => {
-    if(typeof arr === "object"){
+    if(typeof arr === "object" && arr !== null){
         if(Array.isArray(arr)){
             const n = [];
             arr.forEach((e, i) => n[i] = deepCopy(e))
@@ -37,4 +37,15 @@ export const max = (a, b = undefined) => {
         return max;
     }
     return a > b ? a : b;
+}
+
+export const min = (a, b = undefined) => {
+    if(Array.isArray(a)) {
+        let min = a[0]
+        for (let i2 = 1; i2 < a.length; i2++) {
+            min > a[i2] && (min = a[i2]);
+        }
+        return min;
+    }
+    return a < b ? a : b;
 }
