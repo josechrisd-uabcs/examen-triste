@@ -252,12 +252,14 @@ class InGameScreen extends Entity {
         this.sped_up = false;
         this.point_map = [];
         this.time_elapsed = 0;
+        this.speed_boost_timer = 0;
     }
 
     init(game) {
         game.setContext({
             speed: .5,
             next_figurine: figurines[Math.floor(Math.random() * figurines.length)],
+            speed_boost: 180
         })
         this.generate_figurine(game);
     }
@@ -341,6 +343,12 @@ class InGameScreen extends Entity {
     update(game){
         this.clock += game.deltaTime * (this.sped_up ? 6 : 1);
         this.time_elapsed += game.deltaTime;
+        this.speed_boost_timer += game.deltaTime;
+        while(this.speed_boost_timer > game.context.speed_boost){
+            this.speed_boost_timer -= game.context.speed_boost;
+            game.context.speed -= .1;
+            game.context.speed = Math.max(game.context.speed, .15)
+        }
         while(this.clock > game.context.speed){
             this.clock -= game.context.speed;
             this.figurine.pos = [this.figurine.pos[0], this.figurine.pos[1] + 1]
@@ -400,5 +408,8 @@ class InGameScreen extends Entity {
 
         ctx.fillText("TIEMPO", 320, 172);
         ctx.fillText(this.time_elapsed.toFixed(0), 320, 152);
+        
+        ctx.fillText("SIG. INCR.", 320, 220);
+        ctx.fillText((game.context.speed_boost - this.speed_boost_timer).toFixed(0), 320, 200);
     }
 }
