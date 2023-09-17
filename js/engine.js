@@ -57,7 +57,7 @@ export class Game {
     }
 
     removeEntitiesOfType(class_name){
-        this.entities = this.entities.filter(e => e.constructor.name == class_name);
+        this.entities = this.entities.filter(e => e.constructor.name !== class_name);
         this._entities_map.delete(class_name);
     }
 
