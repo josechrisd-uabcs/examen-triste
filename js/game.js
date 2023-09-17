@@ -246,7 +246,7 @@ class InGameScreen extends Entity {
         this.background = '#222'
         this.board = Object.freeze({
             pos: [ 10, 10 ],
-            cell_size: [ 20, 20 ],
+            cell_size: [ 16, 16 ],
             size: [ 10, 20 ],
             padding: 4
         });
