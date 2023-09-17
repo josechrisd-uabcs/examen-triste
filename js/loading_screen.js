@@ -1,4 +1,5 @@
 import { load_assets } from "./asset_loader.js";
+import { Background } from "./background.js";
 import { Entity } from "./engine.js";
 import { HomeScreen } from "./game.js";
 import { min } from "./utils.js";
@@ -41,6 +42,7 @@ export class LoadingScreen extends Entity {
                     this.load = (assets_loaded + assets_failed) / assets_to_load;
                     if(assets_loaded + assets_failed == assets_to_load){
                         game.removeEntity(this);
+                        game.addEntity(new Background());
                         game.addEntity(new HomeScreen());
                     }
                 })
