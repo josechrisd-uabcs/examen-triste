@@ -248,8 +248,6 @@ export class HomeScreen extends Entity {
     }
 
     draw(ctx, size, game){
-        ctx.fillStyle = this.background;
-        ctx.fillRect(0, 0, ...size);
         this.options.forEach((e, i) => {
             ctx.font = this.font;
             ctx.fillStyle = i == this.selected_option ? this.selectedForeground : this.foreground;
@@ -499,14 +497,11 @@ class InGameScreen extends Entity {
         }
     }
 
-    draw(ctx, size, game){
-        ctx.fillStyle = this.background;
-        ctx.fillRect(0, 0, ...size);
-        
-        ctx.fillStyle = "#000";
+    draw(ctx, size, game){       
+        ctx.fillStyle = "#0002";
         ctx.fillRect(...this.board.pos, ...this.board.cell_size.map((e, i) => e * this.board.size[i] + (this.board.size[i] + 1) * this.board.padding));
 
-        ctx.fillStyle = '#111';
+        ctx.fillStyle = '#00000065';
         for (let i = 0, x = this.board.pos[0] + this.board.padding; i < this.board.size[0]; i++, x += this.board.cell_size[0] + this.board.padding) {
             for (let j = 0, y = this.board.pos[1] + this.board.padding; j < this.board.size[1]; j++, y += this.board.cell_size[1] + this.board.padding) {
                 ctx.fillRect(x, y, ...this.board.cell_size);

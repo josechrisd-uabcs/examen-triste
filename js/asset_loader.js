@@ -98,10 +98,16 @@ const ia = [
     "./assets/images/blocks/oxidized_cut_copper.png",
     "./assets/images/blocks/sand.png",
     "./assets/images/blocks/gravel.png",
-    "./assets/images/blocks/spruce_planks.png"
+    "./assets/images/blocks/spruce_planks.png",
+    "./assets/images/stone_bricks.png"
 ]
 
 export const assets = {
+    bg_image: {
+        type: ASSET_TYPE.image,
+        url: ia[7],
+        color: "#ff0000"
+    },
     l_image: {
         type: ASSET_TYPE.image,
         url: ia[0],
