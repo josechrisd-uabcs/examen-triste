@@ -443,10 +443,16 @@ class InGameScreen extends Entity {
         this.clock += game.deltaTime * (this.sped_up ? 6 : 1);
         this.time_elapsed += game.deltaTime;
         this.speed_boost_timer += game.deltaTime;
+        let chd = false;
         while(this.speed_boost_timer > game.context.speed_boost){
             this.speed_boost_timer -= game.context.speed_boost;
             game.context.speed -= .1;
             game.context.speed = Math.max(game.context.speed, .15)
+            chd = true;
+        }
+        if (chd && assets.lup.asset) {
+            assets.lup.asset.currentTime = 0;
+            assets.lup.asset.play();
         }
         while(this.clock > game.context.speed){
             this.clock -= game.context.speed;

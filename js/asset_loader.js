@@ -13,15 +13,19 @@ const aa = [
 ]
 
 const block_sounds = {
-    bamboo: [
-        './assets/audio/sounds/bamboo/place1.ogg',
-        './assets/audio/sounds/bamboo/place2.ogg',
-        './assets/audio/sounds/bamboo/place3.ogg',
-        './assets/audio/sounds/bamboo/place4.ogg',
-        './assets/audio/sounds/bamboo/place5.ogg',
-        './assets/audio/sounds/bamboo/place6.ogg',
-    ],
-    copper: [
+    bamboo: {
+        sounds: [
+            './assets/audio/sounds/bamboo/place1.ogg',
+            './assets/audio/sounds/bamboo/place2.ogg',
+            './assets/audio/sounds/bamboo/place3.ogg',
+            './assets/audio/sounds/bamboo/place4.ogg',
+            './assets/audio/sounds/bamboo/place5.ogg',
+            './assets/audio/sounds/bamboo/place6.ogg',
+        ],
+        volume: .5
+    },
+    copper: {
+        sounds: [
         './assets/audio/sounds/copper/break1.ogg',
         './assets/audio/sounds/copper/break2.ogg',
         './assets/audio/sounds/copper/break3.ogg',
@@ -32,37 +36,54 @@ const block_sounds = {
         './assets/audio/sounds/copper/step4.ogg',
         './assets/audio/sounds/copper/step5.ogg',
         './assets/audio/sounds/copper/step6.ogg',
-    ],
-    grass: [
-        './assets/audio/sounds/grass/grass1.ogg',
-        './assets/audio/sounds/grass/grass2.ogg',
-        './assets/audio/sounds/grass/grass3.ogg',
-        './assets/audio/sounds/grass/grass4.ogg',
-    ],
-    gravel: [
+        ],
+        volume: .8
+    },
+    grass: {
+        sounds: [
+            './assets/audio/sounds/grass/grass1.ogg',
+            './assets/audio/sounds/grass/grass2.ogg',
+            './assets/audio/sounds/grass/grass3.ogg',
+            './assets/audio/sounds/grass/grass4.ogg',
+        ],
+        volume: .2
+    },
+    gravel: {
+        sounds: [
         './assets/audio/sounds/gravel/gravel1.ogg',
         './assets/audio/sounds/gravel/gravel2.ogg',
         './assets/audio/sounds/gravel/gravel3.ogg',
         './assets/audio/sounds/gravel/gravel4.ogg',
-    ],
-    sand: [
+        ],
+        volume: .25
+    },
+    sand: {
+        sounds: [
         './assets/audio/sounds/sand/sand1.ogg',
         './assets/audio/sounds/sand/sand2.ogg',
         './assets/audio/sounds/sand/sand3.ogg',
         './assets/audio/sounds/sand/sand4.ogg',
-    ],
-    stone: [
+        ],
+        volume: .6
+    },
+    stone: {
+        sounds: [
         './assets/audio/sounds/stone/stone1.ogg',
         './assets/audio/sounds/stone/stone2.ogg',
         './assets/audio/sounds/stone/stone3.ogg',
         './assets/audio/sounds/stone/stone4.ogg',
-    ],
-    wood: [
+        ],
+        volume: .5
+    },
+    wood: {
+        sounds: [
         './assets/audio/sounds/wood/wood1.ogg',
         './assets/audio/sounds/wood/wood2.ogg',
         './assets/audio/sounds/wood/wood3.ogg',
         './assets/audio/sounds/wood/wood4.ogg',
-    ]
+        ],
+        volume: .5
+    },
 }
 
 const misc_sounds = {
@@ -143,10 +164,11 @@ export const assets = {
     ...(() => {
         const n = {};
         Object.entries(block_sounds).forEach(([key, val]) => {
-            val.forEach((file, i) => {
+            val.sounds.forEach((file, i) => {
                 n[key + '_' + i] = {
                     type: ASSET_TYPE.audio,
-                    url: file
+                    url: file,
+                    volume: val.volume ?? 1
                 }
             })
         })
@@ -160,13 +182,15 @@ export const assets = {
                 type: ASSET_TYPE.audio,
                 url: exp, 
                 pitch: .55 + (i / 10),
+                volume: .5
             }
         }
         return n
     })(),
     lup: {
         type: ASSET_TYPE.audio,
-        url: misc_sounds.level_up
+        url: misc_sounds.level_up,
+        volume: .5
     },
 
 }
@@ -189,6 +213,9 @@ const load_asset = ({type, url, ...ee}) => {
             if(ee.pitch){
                 audio.mozPreservesPitch = false;
                 audio.playbackRate = ee.pitch;
+            }
+            if(ee.volume){
+                audio.volume = ee.volume ?? 1;
             }
             audio.addEventListener("canplaythrough", (event) => {
                 res(audio);
